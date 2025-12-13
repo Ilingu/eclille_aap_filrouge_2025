@@ -8,8 +8,6 @@
 #include "ll.h"
 #include "stack.h"
 
-// ./fil_rouge_1 -o ex1.dot -i ex1.txt
-
 int main(int argc, char **argv) {
   assert(argc <= 5);
   char *input = NULL;
@@ -26,20 +24,20 @@ int main(int argc, char **argv) {
   }
 
   /* GRAPHM TESTS */
-  printf("------GRAPHM TESTS------\n");
+  // printf("------GRAPHM TESTS------\n");
+  // t_graphm *gm = graphm_from_file(input);
+  // show_graphm(gm);
+  // graphm_to_dot(gm, output);
 
-  t_graphm *gm = graphm_from_file(input);
-  show_graphm(gm);
-  graphm_to_dot(gm, output);
-
-  free_graphm(gm);
+  // free_graphm(gm);
 
   /* GRAPHL TESTS */
-  // printf("------GRAPHL TESTS------\n");
-  // t_graphl *gl = graphl_from_file(input);
-  // graphl_to_dot(gl, output);
+  printf("------GRAPHL TESTS------\n");
+  t_graphl *gl = graphl_from_file(input);
+  show_graphl(gl);
+  graphl_to_dot(gl, output);
 
-  // free_graphl(gl);
+  free_graphl(gl);
 
   return 0;
 }

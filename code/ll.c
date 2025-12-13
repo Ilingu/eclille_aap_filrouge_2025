@@ -57,3 +57,23 @@ t_list list_free(t_list l) {
   }
   return NULL;
 }
+
+// Retourne un curseur de liste pour parcourir l
+// Utilisation : t_node * lc = list_cursor_new(l);
+// Remarque : en fait, un curseur est aussi une liste chaînée !
+t_node *list_cursor_new(t_list l) { return l; }
+
+// Retourne 1 si la fin de la liste a été atteinte
+// Remarque : la fin d'une liste (NULL) est la même chose qu'une liste vide !
+int list_cursor_at_end(t_node *lc) { return list_is_empty(lc); }
+
+// Retourne la valeur du maillon actuellement pointé par lc
+// Remarque : ça revient en fait à prendre la valeur du premier maillon de lc !
+int list_cursor_get_val(t_node *lc) { return list_get_first_val(lc); }
+
+// Avance le curseur vers le maillon suivant
+// Utilisation : lc = list_cursor_next(lc);
+t_node *list_cursor_next(t_node *lc) {
+  assert(lc != NULL);
+  return lc->p_next;
+}

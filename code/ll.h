@@ -19,5 +19,9 @@ void list_show(t_list l);
 t_vertex list_get_first_val(t_list l);
 t_list list_remove_head(t_list l);
 t_list list_free(t_list l);
+t_node *list_cursor_new(t_list l);
+int list_cursor_at_end(t_node *lc);
+int list_cursor_get_val(t_node *lc);
+t_node *list_cursor_next(t_node *lc);
 
 #endif

@@ -201,10 +201,10 @@ void graphl_to_dot(t_graphl *gl, char *out_path) {
 
   fprintf(file, "digraph graphm {\n");
   for (int i = 0; i < gl->size; i++) {
-    t_node *n = gl->l[i];
-    while (n != NULL) {
-      fprintf(file, "  %d -> %d;\n", i, n->val);
-      n = n->p_next;
+    t_node *lc = list_cursor_new(gl->l[i]);
+    while (!list_cursor_at_end(lc)) {
+      fprintf(file, "  %d -> %d;\n", i, list_cursor_get_val(lc));
+      lc = list_cursor_next(lc);
     }
   }
   fprintf(file, "}\n");
