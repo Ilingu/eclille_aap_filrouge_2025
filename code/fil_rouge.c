@@ -72,14 +72,16 @@ int main(int argc, char **argv) {
     }
   }
 
-  // ask for required flags
-  while (start < 0) {
-    printf("Please choose a starting point.\n");
-    scanf("%d", &start);
-  }
-  while (goal < 0) {
-    printf("Please choose a target point.\n");
-    scanf("%d", &goal);
+  if (command == FIND) {
+    // ask for required flags
+    while (start < 0) {
+      printf("Please choose a starting point.\n");
+      scanf("%d", &start);
+    }
+    while (goal < 0) {
+      printf("Please choose a target point.\n");
+      scanf("%d", &goal);
+    }
   }
 
   /* ---------PROGAM--------- */
@@ -95,6 +97,10 @@ int main(int argc, char **argv) {
       graph_show_path(path, output);
       free_stack(path); // free memory
     } else {
+      int **cfc = graphl_search_cfc(gl);
+      show_cfc(cfc, gl->size);
+
+      free_cfc(cfc, gl->size);
     }
 
     free_graphl(gl); // free memory
@@ -111,6 +117,10 @@ int main(int argc, char **argv) {
       graph_show_path(path, output);
       free_stack(path); // free memory
     } else {
+      int **cfc = graphm_search_cfc(gm);
+      show_cfc(cfc, gm->size);
+
+      free_cfc(cfc, gm->size);
     }
 
     free_graphm(gm); // free memory

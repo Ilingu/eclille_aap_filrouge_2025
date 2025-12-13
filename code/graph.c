@@ -146,6 +146,55 @@ t_graphl *graphl_from_file(char *file_path) {
   return gl;
 }
 
+/* COPY GRAPH */
+t_graphm *copy_graphm(t_graphm *gm) {
+  t_graphm *gm_copy = new_graphm(gm->size);
+  for (int i = 0; i < gm->size; i++) {
+    for (int j = 0; j < gm->size; j++) {
+      gm_copy->m[i][j] = gm->m[i][j];
+    }
+  }
+  return gm_copy;
+}
+t_graphl *copy_graphl(t_graphl *gl) {
+  t_graphl *gl_copy = new_graphl(gl->size);
+  for (int i = 0; i < gl->size; i++) {
+    t_node *lc = list_cursor_new(gl->l[i]);
+    while (!list_cursor_at_end(lc)) {
+      int val = list_cursor_get_val(lc);
+      list_add_head(val, gl_copy->l[i]);
+      lc = list_cursor_next(lc);
+    }
+  }
+  return gl_copy;
+}
+
+/* TRANSPOSE GRAPH */
+t_graphm *transpose_graphm(t_graphm *gm) {
+  t_graphm *gm_transposed = copy_graphm(gm);
+  for (int i = 0; i < gm->size; i++) {
+    // iterate only on the upper triangle, to prevent double transposing (HI the bug that killed 1h of my life 😮‍💨)
+    for (int j = i + 1; j < gm->size; j++) {
+      int temp = gm_transposed->m[i][j];
+      gm_transposed->m[i][j] = gm_transposed->m[j][i];
+      gm_transposed->m[j][i] = temp;
+    }
+  }
+  return gm_transposed;
+}
+t_graphl *transpose_graphl(t_graphl *gl) {
+  t_graphl *gl_transposed = new_graphl(gl->size);
+  for (int i = 0; i < gl->size; i++) {
+    t_node *lc = list_cursor_new(gl->l[i]);
+    while (!list_cursor_at_end(lc)) {
+      int val = list_cursor_get_val(lc);
+      gl_transposed->l[val] = list_add_head(i, gl_transposed->l[val]);
+      lc = list_cursor_next(lc);
+    }
+  }
+  return gl_transposed;
+}
+
 /* ADD ARC */
 void graphm_add_arc(t_graphm *gm, int from, int to) {
   assert(from < gm->size && to < gm->size);
@@ -403,6 +452,182 @@ t_stack *graphl_find_path_it(t_graphl *gl, int from, int to) {
   free_stack(traversal);
 
   return reverse_stack(path);
+}
+
+/* CFC SEARCH */
+// global
+int **graphm_search_cfc(t_graphm *gm) {
+  t_bool *marking = malloc(gm->size * sizeof(t_bool));
+  for (int i = 0; i < gm->size; i++)
+    marking[i] = 0;
+
+  t_bool *order = malloc(gm->size * sizeof(t_bool));
+
+  int step = 0;
+  for (int x = 0; x < gm->size; x++)
+    if (marking[x] == 0)
+      graphm_kosaraju_1_rec(gm, x, marking, order, &step);
+
+  // invsersed graph
+  t_graphm *gm_transposed = transpose_graphm(gm);
+
+  // inversed order
+  t_bool *inv_order = malloc(gm->size * sizeof(t_bool));
+  for (int x = 0; x < gm->size; x++)
+    inv_order[(gm->size - 1) - order[x]] = x;
+
+  // CFC
+  for (int i = 0; i < gm->size; i++)
+    marking[i] = 0;
+
+  unsigned int nb_scc = 0;
+  int **cfc = malloc(gm->size * sizeof(int *));
+  for (int i = 0; i < gm->size; i++) {
+    cfc[i] = malloc(gm->size * sizeof(int));
+    for (int j = 0; j < gm->size; j++) {
+      cfc[i][j] = -1;
+    }
+  }
+
+  for (int i = 0; i < gm->size; i++) {
+    int u = inv_order[i];
+    if (marking[u] == 0) {
+      graphm_kosaraju_2_rec(gm_transposed, u, marking, cfc[nb_scc]);
+      nb_scc++;
+    }
+  }
+
+  free_graphm(gm_transposed);
+  free(inv_order);
+  free(order);
+  free(marking);
+
+  return cfc;
+}
+int **graphl_search_cfc(t_graphl *gl) {
+  t_bool *marking = malloc(gl->size * sizeof(t_bool));
+  for (int i = 0; i < gl->size; i++)
+    marking[i] = 0;
+
+  t_bool *order = malloc(gl->size * sizeof(t_bool));
+
+  int step = 0;
+  for (int x = 0; x < gl->size; x++)
+    if (marking[x] == 0)
+      graphl_kosaraju_1_rec(gl, x, marking, order, &step);
+
+  // invsersed graph
+  t_graphl *gl_transposed = transpose_graphl(gl);
+
+  // inversed order
+  t_bool *inv_order = malloc(gl->size * sizeof(t_bool));
+  for (int x = 0; x < gl->size; x++)
+    inv_order[(gl->size - 1) - order[x]] = x;
+
+  // CFC
+  for (int i = 0; i < gl->size; i++)
+    marking[i] = 0;
+
+  unsigned int nb_scc = 0;
+  int **cfc = malloc(gl->size * sizeof(int *));
+  for (int i = 0; i < gl->size; i++) {
+    cfc[i] = malloc(gl->size * sizeof(int));
+    for (int j = 0; j < gl->size; j++) {
+      cfc[i][j] = -1;
+    }
+  }
+
+  for (int i = 0; i < gl->size; i++) {
+    int u = inv_order[i];
+    if (marking[u] == 0) {
+      graphl_kosaraju_2_rec(gl_transposed, u, marking, cfc[nb_scc]);
+      nb_scc++;
+    }
+  }
+
+  free_graphl(gl_transposed);
+  free(inv_order);
+  free(order);
+  free(marking);
+
+  return cfc;
+}
+
+// step 1
+void graphm_kosaraju_1_rec(t_graphm *gm, int x, int *marking, int *order, int *step) {
+  marking[x] = 1;
+  for (int y = 0; y < gm->size; y++) {
+    if (gm->m[x][y] == 1 && marking[y] == 0)
+      graphm_kosaraju_1_rec(gm, y, marking, order, step);
+  }
+  order[x] = *step;
+  (*step)++;
+}
+void graphl_kosaraju_1_rec(t_graphl *gl, int x, int *marking, int *order, int *step) {
+  marking[x] = 1;
+
+  t_node *lc = list_cursor_new(gl->l[x]);
+  while (!list_cursor_at_end(lc)) {
+    int y = list_cursor_get_val(lc);
+    if (marking[y] == 0)
+      graphl_kosaraju_1_rec(gl, y, marking, order, step);
+
+    lc = list_cursor_next(lc);
+  }
+  order[x] = *step;
+  (*step)++;
+}
+
+// step 2
+void graphm_kosaraju_2_rec(t_graphm *gm, int x, int *marking, int *curr_cfc) {
+  marking[x] = 1;
+  int curr_index = 0;
+  while (curr_cfc[curr_index] != -1 && curr_index < gm->size)
+    curr_index++;
+  curr_cfc[curr_index] = x;
+
+  for (int y = 0; y < gm->size; y++) {
+    if (gm->m[x][y] == 1 && marking[y] == 0)
+      graphm_kosaraju_2_rec(gm, y, marking, curr_cfc);
+  }
+}
+void graphl_kosaraju_2_rec(t_graphl *gl, int x, int *marking, int *curr_cfc) {
+  marking[x] = 1;
+  int curr_index = 0;
+  while (curr_cfc[curr_index] != -1 && curr_index < gl->size)
+    curr_index++;
+  curr_cfc[curr_index] = x;
+
+  t_node *lc = list_cursor_new(gl->l[x]);
+  while (!list_cursor_at_end(lc)) {
+    int y = list_cursor_get_val(lc);
+    if (marking[y] == 0)
+      graphl_kosaraju_2_rec(gl, y, marking, curr_cfc);
+
+    lc = list_cursor_next(lc);
+  }
+}
+
+void show_cfc(int **cfc, int size) {
+  for (int i = 0; i < size; i++) {
+    if (cfc[i][0] == -1)
+      continue;
+    printf("Composante #%d: [", i + 1);
+    for (int j = 0; j < size; j++) {
+      if (j + 1 < size && cfc[i][j + 1] == -1) {
+        printf("%d", cfc[i][j]);
+        break;
+      }
+      printf("%d, ", cfc[i][j]);
+    }
+    printf("]\n");
+  }
+}
+
+void free_cfc(int **cfc, int size) {
+  for (int i = 0; i < size; i++)
+    free(cfc[i]);
+  free(cfc);
 }
 
 /* FREE */
