@@ -5,6 +5,7 @@
 
 #include "graph.h"
 #include "ll.h"
+#include "stack.h"
 
 #define MAX_READ_LINE 100
 
@@ -211,6 +212,91 @@ void graphl_to_dot(t_graphl *gl, char *out_path) {
 
   fclose(file);
 }
+
+/* PATH FINDING */
+
+t_stack *graphm_find_path(t_graphm *gm, int from, int to, t_bool rec) {
+  if (rec) {
+    t_stack *path = stack_new();
+    t_bool *visited = malloc(gm->size * sizeof(t_bool));
+    for (int i = 0; i < gm->size; i++)
+      visited[i] = 0;
+
+    graphm_find_path_rec(gm, from, to, visited, path);
+
+    free(visited);
+    return path;
+  }
+
+  return graphm_find_path_it(gm, from, to);
+}
+t_stack *graphl_find_path(t_graphl *gl, int from, int to, t_bool rec) {
+  if (rec) {
+    t_stack *path = stack_new();
+    t_bool *visited = malloc(gl->size * sizeof(t_bool));
+    for (int i = 0; i < gl->size; i++)
+      visited[i] = 0;
+
+    graphl_find_path_rec(gl, from, to, visited, path);
+
+    free(visited);
+    return path;
+  }
+
+  return graphl_find_path_it(gl, from, to);
+}
+
+// DFS
+t_bool graphm_find_path_rec(t_graphm *gm, int from, int to, t_bool *visited,
+                            t_stack *path) {
+  if (from == to) {
+    stack_push(from, path);
+    return 1;
+  }
+
+  if (visited[from] == 0) {
+    visited[from] = 1;
+    for (int i = 0; i < gm->size; i++) {
+      if (gm->m[from][i] == 0)
+        continue;
+      int w = gm->m[from][i];
+      t_bool found = graphm_find_path_rec(gm, w, to, visited, path);
+      if (found) {
+        stack_push(from, path);
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+t_bool graphl_find_path_rec(t_graphl *gl, int from, int to, t_bool *visited,
+                            t_stack *path) {
+  if (from == to) {
+    stack_push(from, path);
+    return 1;
+  }
+
+  if (visited[from] == 0) {
+    visited[from] = 1;
+    t_node *lc = list_cursor_new(gl->l[from]);
+    while (!list_cursor_at_end(lc)) {
+      int w = list_cursor_get_val(lc);
+      t_bool found = graphl_find_path_rec(gl, w, to, visited, path);
+      if (found) {
+        stack_push(from, path);
+        return 1;
+      }
+      lc = list_cursor_next(lc);
+    }
+  }
+
+  return 0;
+}
+
+// BFS
+t_stack *graphm_find_path_it(t_graphm *gm, int from, int to) {}
+t_stack *graphl_find_path_it(t_graphl *gl, int from, int to) {}
 
 /* FREE */
 void free_graphm(t_graphm *graph) {

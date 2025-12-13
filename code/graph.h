@@ -2,6 +2,7 @@
 #define GRAPH_H
 
 #include "ll.h"
+#include "stack.h"
 
 typedef int t_bool; // Booléen
 
@@ -35,8 +36,18 @@ void graphl_to_dot(t_graphl * gl, char* out_path);
 void graphm_add_arc(t_graphm * gm, int from, int to);
 void graphl_add_arc(t_graphl * gl, int from, int to);
 
-t_bool graphm_check_arc(t_graphm * gm, int from, int to);
-t_bool graphl_check_arc(t_graphl * gl, int from, int to);
+// Aux
+t_stack* graphm_find_path(t_graphm * gm, int from, int to, t_bool rec);
+t_stack* graphl_find_path(t_graphl * gl, int from, int to, t_bool rec);
+
+// DFS
+t_bool graphm_find_path_rec(t_graphm * gm, int from, int to, t_bool* visisted, t_stack* path);
+t_bool graphl_find_path_rec(t_graphl * gl, int from, int to, t_bool* visited, t_stack* path);
+
+// BFS
+t_stack* graphm_find_path_it(t_graphm * gm, int from, int to);
+t_stack* graphl_find_path_it(t_graphl * gl, int from, int to);
+
 
 void show_graphm(t_graphm * gm);
 void show_graphl(t_graphl * gl);

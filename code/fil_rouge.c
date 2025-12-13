@@ -24,20 +24,20 @@ int main(int argc, char **argv) {
   }
 
   /* GRAPHM TESTS */
-  // printf("------GRAPHM TESTS------\n");
-  // t_graphm *gm = graphm_from_file(input);
-  // show_graphm(gm);
-  // graphm_to_dot(gm, output);
+  printf("------GRAPHM TESTS------\n");
+  t_graphm *gm = graphm_from_file(input);
+  show_graphm(gm);
+  graphm_to_dot(gm, output);
 
-  // free_graphm(gm);
+  free_graphm(gm);
 
   /* GRAPHL TESTS */
-  printf("------GRAPHL TESTS------\n");
-  t_graphl *gl = graphl_from_file(input);
-  show_graphl(gl);
-  graphl_to_dot(gl, output);
+  // printf("------GRAPHL TESTS------\n");
+  // t_graphl *gl = graphl_from_file(input);
+  // show_graphl(gl);
+  // graphl_to_dot(gl, output);
 
-  free_graphl(gl);
+  // free_graphl(gl);
 
   return 0;
 }
