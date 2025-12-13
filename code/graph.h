@@ -40,6 +40,8 @@ void graphl_add_arc(t_graphl * gl, int from, int to);
 t_stack* graphm_find_path(t_graphm * gm, int from, int to, t_bool rec);
 t_stack* graphl_find_path(t_graphl * gl, int from, int to, t_bool rec);
 
+void graph_show_path(t_stack* path, char* out_path);
+
 // DFS
 t_bool graphm_find_path_rec(t_graphm * gm, int from, int to, t_bool* visisted, t_stack* path);
 t_bool graphl_find_path_rec(t_graphl * gl, int from, int to, t_bool* visited, t_stack* path);

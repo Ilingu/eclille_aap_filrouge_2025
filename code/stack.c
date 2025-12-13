@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "ll.h"
 #include "stack.h"
 
 // Crée une nouvelle pile vide
@@ -32,4 +33,21 @@ t_vertex stack_pop(t_stack *ps) {
 t_vertex stack_top(t_stack *ps) {
   assert(!list_is_empty(*ps));
   return list_get_first_val(*ps);
+}
+
+// Retourne une version mirroir de la satck en argument
+// ATTENTION: ps n'existe plus après l'exécution
+t_stack *reverse_stack(t_stack *ps) {
+  t_stack *rstack = stack_new();
+  while (!stack_is_empty(ps))
+    stack_push(stack_pop(ps), rstack);
+
+  free_stack(ps);
+  return rstack;
+}
+
+// free la mémoire de la stack
+void free_stack(t_stack *ps) {
+  list_free(*ps);
+  free(ps);
 }
