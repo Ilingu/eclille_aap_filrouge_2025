@@ -17,4 +17,13 @@ ex1find: build
 	./fr find -i ./tests/graphes/numeros/ex1.txt -start 0 -goal 3
 
 ex2find: build
-	./fr find -i ./tests/graphes/numeros/ex2.txt -start 2 -goal 9
+	./fr find -i ./tests/graphes/numeros/ex2.txt -start 2 -goal 9 -ll -rec
+
+ex2cfct: build
+	./fr cfc -i ./tests/graphes/numeros/ex2.txt -cfct
+
+ex3cfc: build
+	./fr cfc -i ./tests/graphes/numeros/ex3.txt -ll
+
+ex1cfct: build
+	./fr cfc -i ./tests/graphes/numeros/ex1.txt -ll -cfct

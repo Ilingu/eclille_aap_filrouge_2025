@@ -481,6 +481,8 @@ int **graphm_search_cfc(t_graphm *gm) {
     marking[i] = 0;
 
   unsigned int nb_scc = 0;
+
+  // init
   int **cfc = malloc(gm->size * sizeof(int *));
   for (int i = 0; i < gm->size; i++) {
     cfc[i] = malloc(gm->size * sizeof(int));
@@ -529,6 +531,8 @@ int **graphl_search_cfc(t_graphl *gl) {
     marking[i] = 0;
 
   unsigned int nb_scc = 0;
+
+  // init
   int **cfc = malloc(gl->size * sizeof(int *));
   for (int i = 0; i < gl->size; i++) {
     cfc[i] = malloc(gl->size * sizeof(int));
@@ -628,6 +632,110 @@ void free_cfc(int **cfc, int size) {
   for (int i = 0; i < size; i++)
     free(cfc[i]);
   free(cfc);
+}
+
+/* CFC Terminal FILTER */
+
+int **cfctm_filter(t_graphm *gm, int **cfc) {
+  int **cfct = malloc(gm->size * sizeof(int *));
+  for (int i = 0; i < gm->size; i++) {
+    cfct[i] = malloc(gm->size * sizeof(int));
+    for (int j = 0; j < gm->size; j++) {
+      cfct[i][j] = -1;
+    }
+  }
+
+  for (int i = 0; i < gm->size; i++) {
+    if (cfc[i][0] == -1)
+      continue;
+    for (int j = 0; j < gm->size; j++) {
+      if (cfc[i][j] == -1)
+        break;
+
+      int curr_cfc_member = cfc[i][j];
+
+      t_bool not_a_cfct = 0;
+      for (int k = 0; k < gm->size; k++) {
+        if (gm->m[curr_cfc_member][k] == 1) {
+          // check if k is in cfc, if no, then it's not a cfct
+          t_bool k_in_cfc = 0;
+          for (int l = 0; l < gm->size; l++) {
+            if (cfc[i][l] == k) {
+              k_in_cfc = 1;
+              break;
+            }
+          }
+
+          if (!k_in_cfc) {
+            not_a_cfct = 1;
+            break;
+          }
+        }
+      }
+
+      if (not_a_cfct) {
+        for (int k = 0; k < gm->size; k++)
+          cfct[i][k] = -1;
+        break;
+      } else {
+        // we only know that curr_cfc_member is in a potential cfct
+        cfct[i][j] = curr_cfc_member;
+      }
+    }
+  }
+
+  return cfct;
+}
+int **cfctl_filter(t_graphl *gl, int **cfc) {
+  int **cfct = malloc(gl->size * sizeof(int *));
+  for (int i = 0; i < gl->size; i++) {
+    cfct[i] = malloc(gl->size * sizeof(int));
+    for (int j = 0; j < gl->size; j++) {
+      cfct[i][j] = -1;
+    }
+  }
+
+  for (int i = 0; i < gl->size; i++) {
+    if (cfc[i][0] == -1)
+      continue;
+    for (int j = 0; j < gl->size; j++) {
+      if (cfc[i][j] == -1)
+        break;
+
+      int curr_cfc_member = cfc[i][j];
+
+      t_bool not_a_cfct = 0;
+      t_node *lc = list_cursor_new(gl->l[curr_cfc_member]);
+      while (!list_cursor_at_end(lc)) {
+        int k = list_cursor_get_val(lc);
+        // check if k is in cfc, if no, then it's not a cfct
+        t_bool k_in_cfc = 0;
+        for (int l = 0; l < gl->size; l++) {
+          if (cfc[i][l] == k) {
+            k_in_cfc = 1;
+            break;
+          }
+        }
+
+        if (!k_in_cfc) {
+          not_a_cfct = 1;
+          break;
+        }
+        lc = list_cursor_next(lc);
+      }
+
+      if (not_a_cfct) {
+        for (int k = 0; k < gl->size; k++)
+          cfct[i][k] = -1;
+        break;
+      } else {
+        // we only know that curr_cfc_member is in a potential cfct
+        cfct[i][j] = curr_cfc_member;
+      }
+    }
+  }
+
+  return cfct;
 }
 
 /* FREE */

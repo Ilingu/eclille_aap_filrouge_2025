@@ -79,6 +79,13 @@ void graphl_kosaraju_2_rec(t_graphl * gl, int x, int* marking, int* curr_cfc);
 void show_cfc(int** cfc, int size);
 void free_cfc(int** cfc, int size);
 
+/* CFCT FILTER */
+int** graphm_search_cfct(t_graphm * gm);
+int** graphl_search_cfct(t_graphl * gl);
+
+int** cfctm_filter(t_graphm * gm, int** cfc);
+int** cfctl_filter(t_graphl * gl, int** cfc);
+
 /* FREE GRAPH*/
 void free_graphm(t_graphm* graph);
 void free_graphl(t_graphl* graph);

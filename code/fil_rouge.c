@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
 
   t_bool is_rec = 0; // recursive mode for "find" command
   t_bool use_ll = 0; // whether to use or not the linked list representation for graph
+  t_bool print_cfct = 0;
 
   for (int i = 2; i < argc; i++) {
     if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
@@ -62,6 +63,8 @@ int main(int argc, char **argv) {
       is_rec = 1;
     else if (strcmp(argv[i], "-ll") == 0)
       use_ll = 1;
+    else if (strcmp(argv[i], "-cfct") == 0)
+      print_cfct = 1;
     else {
       printf("FATAL: flag non reconnu ou omis.\n");
       printf("Exemple:\n");
@@ -100,6 +103,13 @@ int main(int argc, char **argv) {
       int **cfc = graphl_search_cfc(gl);
       show_cfc(cfc, gl->size);
 
+      if (print_cfct) {
+        printf("CFC Terminal:\n");
+        int **cfct = cfctl_filter(gl, cfc);
+        show_cfc(cfct, gl->size);
+        free_cfc(cfct, gl->size);
+      }
+
       free_cfc(cfc, gl->size);
     }
 
@@ -118,7 +128,15 @@ int main(int argc, char **argv) {
       free_stack(path); // free memory
     } else {
       int **cfc = graphm_search_cfc(gm);
+      printf("CFC:\n");
       show_cfc(cfc, gm->size);
+
+      if (print_cfct) {
+        printf("CFC Terminal:\n");
+        int **cfct = cfctm_filter(gm, cfc);
+        show_cfc(cfct, gm->size);
+        free_cfc(cfct, gm->size);
+      }
 
       free_cfc(cfc, gm->size);
     }
