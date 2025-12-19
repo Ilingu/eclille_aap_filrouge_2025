@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     printf("Exemple:\n");
     printf("./fil_rouge dot -i ex1.txt -o out.txt\n");
     printf("./fil_rouge find -start 0 -goal 3 -i ex1.txt -o out.txt\n");
-    printf("./fil_rouge cfc\n");
+    printf("./fil_rouge cfc -i ./tests/graphes/numeros/ex2.txt -cfct\n");
     exit(1); // leave progam
   }
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
       printf("Exemple:\n");
       printf("./fil_rouge dot -i ex1.txt -o out.txt\n");
       printf("./fil_rouge find -start 0 -goal 3 -i ex1.txt -o out.txt\n");
-      // printf("./fil_rouge cfc\n");
+      printf("./fil_rouge cfc -i ./tests/graphes/numeros/ex2.txt -cfct\n");
       exit(1); // leave progam
     }
   }

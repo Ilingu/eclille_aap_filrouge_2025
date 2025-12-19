@@ -27,8 +27,6 @@ t_list * l; // Contenu
 t_graphm * new_graphm(int size);
 t_graphl * new_graphl(int size);
 
-
-
 t_graphm * graphm_from_file(char* file_path);
 t_graphl * graphl_from_file(char* file_path);
 

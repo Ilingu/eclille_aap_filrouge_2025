@@ -1,5 +1,5 @@
 build:
-	gcc ./code/fil_rouge.c -Wall ./code/graph.c ./code/ll.c ./code/stack.c -o ./fr
+	gcc ./code/main.c -Wall ./code/graph.c ./code/ll.c ./code/stack.c -o ./fr
 
 ex1dot: build
 	./fr dot -i ./tests/graphes/numeros/ex1.txt -o out.txt
