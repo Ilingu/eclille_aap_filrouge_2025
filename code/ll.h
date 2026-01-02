@@ -11,7 +11,7 @@ typedef struct node {
 // Liste chaînée (de sommets)
 typedef t_node * t_list;
 
-// Sig
+// Signatures
 t_list list_new();
 t_list list_add_head(t_vertex e, t_list l);
 int list_is_empty(t_list l);

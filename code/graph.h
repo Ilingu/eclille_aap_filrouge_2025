@@ -8,96 +8,118 @@
 
 #define MAX_READ_LINE 500
 
-typedef int t_bool; // Booléen
+typedef int t_bool; // Type personnalisé pour les booléens (0 = Faux, 1 = Vrai)
 
-// Graphe en matrice d’adjacence
+/* STRUCTURES DE DONNÉES */
+
+// 1. Graphe représenté par une Matrice d'adjacence
 typedef struct {
-int size; // Taille: nombre de sommets du graphe
-t_bool ** m; // Contenu
+  int size;      // Nombre de sommets du graphe
+  t_bool ** m;   // Tableau à 2 dimensions. m[i][j] = 1 si arc de i vers j.
 } t_graphm;
 
-// Graphe en listes d’adjacence
+// 2. Graphe représenté par des Listes d'adjacence
 typedef struct {
-int size; // Taille: nombre de sommets du graphe
-t_list * l; // Contenu
+  int size;      // Nombre de sommets du graphe
+  t_list * l;    // Tableau de listes. l[i] contient la liste des voisins de i.
 } t_graphl;
 
-/* DANS LA SUITE:
-- "graphm" se réfère au matrice d’adjacence
-- "graphl" se réfère au listes d’adjacence
+/* NOTES SUR LE NOMMAGE ET L'AFFICHAGE :
+   - "graphm" désigne les fonctions utilisant la matrice.
+   - "graphl" désigne les fonctions utilisant les listes.
 
-Note: dans certains fonction vous verrez dans les arguments un: "t_bool is_nom, char** map_nom".
-C'est souvent parce que ce sont des fonctions d'affichage, et comme interieurement toute les graph sont en représentation nombre,
-ceux en représentation mot, doivent, au moment de l'affichage être reconvertie en mot pour garder l'illusion.
-En ce sens, l'arguement "is_nom" est inutile car "map_nom" en contient déjà l'information (map_nom == NULL est équivalent à is_nom==false),
-cependant par facilité de lecture, choix a été fait de le garder. 
+   Concernant les arguments "t_bool is_nom" et "char** map_nom" :
+   Ces arguments apparaissent dans les fonctions d'affichage.
+   En interne, tous les algorithmes (chemins, CFC) travaillent avec des nombres (0, 1, 2...).
+   Si le graphe d'origine utilisait des MOTS ("start", "stop", ...), on les reconvertie
+   au moment de l'affichage pour l'utilisateur.
+   
+   - map_nom : Tableau de correspondance (ex: map_nom[0] = "start").
+   - is_nom  : Booléen indiquant si on doit utiliser ce tableau.
+   (Note: is_nom est techniquement redondant car si map_nom != NULL, is_nom==1,
+   mais il est conservé pour rendre le code plus lisible).
 */
 
-/* HELPERS */
+/* --- FONCTIONS UTILITAIRES CORE --- */
+
+// Création de graphes vides (allocation mémoire)
 t_graphm * new_graphm(int size);
 t_graphl * new_graphl(int size);
 
+// Création d'un graphe en lisant un fichier texte
 t_graphm * graphm_from_file(char* file_path);
 t_graphl * graphl_from_file(char* file_path);
 
-// returns a list of strings of the mapped words
+// Convertit un fichier avec des noms ("A", "B") en fichier temporaire avec des nombres ("0", "1")
+// Retourne le tableau de correspondance (la "carte" des noms)
 char** convert_word_to_num(char* file_path, char *outpath, int *size);
 
+// Ajoute un arc entre deux sommets
 void graphm_add_arc(t_graphm * gm, int from, int to);
 void graphl_add_arc(t_graphl * gl, int from, int to);
 
+// Crée une copie identique d'un graphe (pour ne pas modifier l'original)
 t_graphm * copy_graphm(t_graphm * gm);
 t_graphl * copy_graphl(t_graphl * gl);
 
+// Calcul la transposée d'un graphe pour l'algorithme de Kosaraju (CFC)
 t_graphm * transpose_graphm(t_graphm * gm);
 t_graphl * transpose_graphl(t_graphl * gl);
 
-/* CONVERT TO DOT */
+/* --- EXPORT VISUEL (DOT) --- */
+// Génère un fichier compatible avec GraphViz pour dessiner le graphe
 void graphm_to_dot(t_graphm * gm, char* out_path, t_bool is_nom, char** map_nom);
 void graphl_to_dot(t_graphl * gl, char* out_path, t_bool is_nom, char** map_nom);
 
-/* FIND PATH */
-// global
+/* --- RECHERCHE DE CHEMIN --- */
+
+// Fonctions principales (appellent soit la version récursive, soit l'itérative)
 t_stack* graphm_find_path(t_graphm * gm, int from, int to, t_bool rec);
 t_stack* graphl_find_path(t_graphl * gl, int from, int to, t_bool rec);
 
+// Affiche le chemin trouvé de manière lisible et dans le bonne ordre (A -> B -> C)
 void graph_show_path(t_stack* path, char* out_path, t_bool is_nom, char** map_nom);
 
-// DFS
+// Version Récursif de DFS (Parcours en Profondeur)
 t_bool graphm_find_path_rec(t_graphm * gm, int from, int to, t_bool* visisted, t_stack* path);
 t_bool graphl_find_path_rec(t_graphl * gl, int from, int to, t_bool* visited, t_stack* path);
 
-// BFS
+// Version Itérative de DFS (utilise une pile)
 t_stack* graphm_find_path_it(t_graphm * gm, int from, int to);
 t_stack* graphl_find_path_it(t_graphl * gl, int from, int to);
 
+// Affiche le contenu brut du graphe dans la console - utilisée pour le debbugage du code.
+// CES FONCTIONS NE SONT PLUS UTILISÉES DANS LE CODE.
 void show_graphm(t_graphm * gm, t_bool is_nom, char** map_nom);
 void show_graphl(t_graphl * gl, t_bool is_nom, char** map_nom);
 
-/* CFC SEARCH */
-// global
+/* --- RECHERCHE DE COMPOSANTES FORTEMENT CONNEXES (CFC) via l'algorithme de Kosaraju --- */
+
+// Fonction principale : orchestre l'algo et retourne la liste des CFC
 int** graphm_search_cfc(t_graphm * gm);
 int** graphl_search_cfc(t_graphl * gl);
 
-// step 1
+// Étape 1 de Kosaraju : Parcours DFS pour noter l'ordre de fin de traitement
 void graphm_kosaraju_1_rec(t_graphm * gm, int x, int* marking, int* order, int* step);
 void graphl_kosaraju_1_rec(t_graphl * gl, int x, int* marking, int* order, int* step);
 
-// step 2
+// Étape 2 de Kosaraju : Parcours sur le graphe transposé pour identifier les groupes
 void graphm_kosaraju_2_rec(t_graphm * gm, int x, int* marking, int* curr_cfc);
 void graphl_kosaraju_2_rec(t_graphl * gl, int x, int* marking, int* curr_cfc);
 
+// Affiche les CFC trouvées
 void show_cfc(int** cfc, int size, FILE *file, t_bool is_nom, char** map_nom);
+// Libère la mémoire du tableau de CFC
 void free_cfc(int** cfc, int size);
 
-/* CFCT FILTER */
-int** graphm_search_cfct(t_graphm * gm);
-int** graphl_search_cfct(t_graphl * gl);
+/* --- FILTRE CFC TERMINAL (CFCT) --- */
+// Filtre les CFC pour ne garder que celles qui n'ont pas de sortie vers d'autres CFC
 
+// Prend les CFC calculées et renvoie uniquement celles terminales
 int** cfctm_filter(t_graphm * gm, int** cfc);
 int** cfctl_filter(t_graphl * gl, int** cfc);
 
-/* FREE GRAPH*/
+/* --- NETTOYAGE MÉMOIRE --- */
 void free_graphm(t_graphm* graph);
 void free_graphl(t_graphl* graph);
 

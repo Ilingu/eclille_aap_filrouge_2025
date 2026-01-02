@@ -6,7 +6,7 @@
 // Pile (de sommets)
 typedef t_list t_stack;
 
-// Sig
+// Signatures
 void stack_show(t_stack * ps);
 t_stack * stack_new();
 int stack_is_empty(t_stack * ps);
