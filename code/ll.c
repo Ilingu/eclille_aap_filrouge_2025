@@ -30,6 +30,15 @@ void list_show(t_list l) {
   }
 }
 
+void list_show_with_map(t_list l, char **map_nom) {
+  t_node *n = l;
+  int i = 0;
+  while (n != NULL) {
+    printf("Maillon %d, valeur = %s\n", i++, map_nom[n->val]);
+    n = n->p_next;
+  }
+}
+
 // Retourne la valeur du premier maillon de la liste l
 t_vertex list_get_first_val(t_list l) {
   assert(l != NULL);

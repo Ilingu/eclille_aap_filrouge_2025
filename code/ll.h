@@ -16,6 +16,7 @@ t_list list_new();
 t_list list_add_head(t_vertex e, t_list l);
 int list_is_empty(t_list l);
 void list_show(t_list l);
+void list_show_with_map(t_list l, char **map_nom); // pour convertir la représentation nombre en mots à l'affichage
 t_vertex list_get_first_val(t_list l);
 t_list list_remove_head(t_list l);
 t_list list_free(t_list l);

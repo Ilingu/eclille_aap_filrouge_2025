@@ -2,12 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 #include "graph.h"
 #include "ll.h"
 #include "stack.h"
-
-#define MAX_READ_LINE 100
 
 /* NEW EMPTY GRAPH */
 t_graphm *new_graphm(int size) {
@@ -146,6 +145,122 @@ t_graphl *graphl_from_file(char *file_path) {
   return gl;
 }
 
+/* CONVERT WORD REPRESENTATION TO NUMBER */
+
+// returns a list of strings of the mapped words
+char **convert_word_to_num(char *inpath, char *outpath, int *size) {
+  // open in-out files
+  assert(size != NULL);
+  FILE *in_file;
+  if (inpath == NULL) {
+    printf("You'll be prompted to specify your graph with an abjacent linked list\n");
+    in_file = stdin;
+  } else
+    in_file = fopen(inpath, "r");
+  assert(in_file != NULL);
+
+  FILE *out_file;
+  if (outpath == NULL) {
+    printf("You need an out path to convert to num representation\n");
+    exit(1);
+  } else
+    out_file = fopen(outpath, "w");
+  assert(out_file != NULL);
+
+  // fetch size, aka number of sommets
+  char g_data[MAX_READ_LINE];
+  fgets(g_data, MAX_READ_LINE, in_file);
+
+  char size_buf[MAX_READ_LINE] = {'\0'};
+  for (int i = 0; i < MAX_READ_LINE; i++) {
+    if (g_data[i] == ' ' || g_data[i] == '\t')
+      break;
+
+    size_buf[i] = g_data[i];
+  }
+  *size = atoi(size_buf);
+
+  // compute the map list, to convert numeros->nom
+  // for ex1.txt: map[0] is "start", etc...
+  char **map = malloc(*size * sizeof(char *));
+  for (int i = 0; i < *size; i++)
+    map[i] = malloc(MAX_READ_LINE * sizeof(char));
+
+  fprintf(out_file, "%d\n", *size);
+
+  int i = 0;
+  while (i < *size) {
+    fgets(g_data, MAX_READ_LINE, in_file); // read the line
+    if (g_data[0] == '\n')
+      continue; // Skip empty line
+
+    // put the line without the '\n' in the map
+    char buf[MAX_READ_LINE] = {'\0'};
+    for (int j = 0; j < MAX_READ_LINE; j++) {
+      if (g_data[j] == '\n') {
+        strcpy(map[i], buf);
+        break;
+      }
+      buf[j] = g_data[j];
+    }
+
+    i++;
+  }
+
+  // gather arc data of the graph
+  while (fgets(g_data, MAX_READ_LINE, in_file)) {
+    if (g_data[0] == '\n')
+      continue; // Skip empty line
+
+    // split a line like "start stop" into "0 1"
+    char from_buf[MAX_READ_LINE] = {'\0'};
+    char to_buf[MAX_READ_LINE] = {'\0'};
+    t_bool before_to = 1;
+    int separator;
+    for (int i = 0; i < MAX_READ_LINE; i++) {
+      if (g_data[i] == '\n')
+        break;
+      if (g_data[i] == ' ' || g_data[i] == '\t') {
+        before_to = 0;
+        separator = i + 1;
+        continue;
+      }
+
+      if (before_to)
+        from_buf[i] = g_data[i];
+      else
+        to_buf[i - separator] = g_data[i];
+    }
+
+    int from = -1;
+    for (int j = 0; j < *size; j++) {
+      if (strcmp(map[j], from_buf) == 0) {
+        from = j;
+        break;
+      }
+    }
+
+    int to = -1;
+    for (int j = 0; j < *size; j++) {
+      if (strcmp(map[j], to_buf) == 0) {
+        to = j;
+        break;
+      }
+    }
+
+    if (from < 0 || to < 0) {
+      printf("Corrupted file\n");
+      exit(1);
+    }
+
+    fprintf(out_file, "%d %d\n", from, to);
+  }
+
+  fclose(in_file);
+  fclose(out_file);
+  return map;
+}
+
 /* COPY GRAPH */
 t_graphm *copy_graphm(t_graphm *gm) {
   t_graphm *gm_copy = new_graphm(gm->size);
@@ -206,26 +321,37 @@ void graphl_add_arc(t_graphl *gl, int from, int to) {
 }
 
 /* SHOW GRAPH */
-void show_graphm(t_graphm *gm) {
+void show_graphm(t_graphm *gm, t_bool is_nom, char **map_nom) {
   for (int i = 0; i < gm->size; i++) {
     for (int j = 0; j < gm->size; j++) {
-      if (j == gm->size - 1)
-        printf("%d", gm->m[i][j]);
-      else
-        printf("%d, ", gm->m[i][j]);
+      if (j == gm->size - 1) {
+        if (is_nom)
+          printf("%s", map_nom[gm->m[i][j]]);
+        else
+          printf("%d", gm->m[i][j]);
+      } else {
+        if (is_nom)
+          printf("%s, ", map_nom[gm->m[i][j]]);
+        else
+          printf("%d, ", gm->m[i][j]);
+      }
     }
     printf("\n");
   }
 }
-void show_graphl(t_graphl *gl) {
+void show_graphl(t_graphl *gl, t_bool is_nom, char **map_nom) {
   for (int i = 0; i < gl->size; i++) {
     printf("Ligne %d:\n", i);
-    list_show(gl->l[i]);
+
+    if (is_nom)
+      list_show_with_map(gl->l[i], map_nom);
+    else
+      list_show(gl->l[i]);
   }
 }
 
 /* TO .DOT FILE */
-void graphm_to_dot(t_graphm *gm, char *out_path) {
+void graphm_to_dot(t_graphm *gm, char *out_path, t_bool is_nom, char **map_nom) {
   FILE *file;
   if (out_path == NULL)
     file = stdout;
@@ -236,15 +362,19 @@ void graphm_to_dot(t_graphm *gm, char *out_path) {
   fprintf(file, "digraph graphm {\n");
   for (int i = 0; i < gm->size; i++) {
     for (int j = 0; j < gm->size; j++) {
-      if (gm->m[i][j] == 1)
-        fprintf(file, "  %d -> %d;\n", i, j);
+      if (gm->m[i][j] == 1) {
+        if (is_nom)
+          fprintf(file, "  %s -> %s;\n", map_nom[i], map_nom[j]);
+        else
+          fprintf(file, "  %d -> %d;\n", i, j);
+      }
     }
   }
   fprintf(file, "}\n");
 
   fclose(file);
 }
-void graphl_to_dot(t_graphl *gl, char *out_path) {
+void graphl_to_dot(t_graphl *gl, char *out_path, t_bool is_nom, char **map_nom) {
   FILE *file;
   if (out_path == NULL)
     file = stdout;
@@ -256,7 +386,11 @@ void graphl_to_dot(t_graphl *gl, char *out_path) {
   for (int i = 0; i < gl->size; i++) {
     t_node *lc = list_cursor_new(gl->l[i]);
     while (!list_cursor_at_end(lc)) {
-      fprintf(file, "  %d -> %d;\n", i, list_cursor_get_val(lc));
+      if (is_nom)
+        fprintf(file, "  %s -> %s;\n", map_nom[i], map_nom[list_cursor_get_val(lc)]);
+      else
+        fprintf(file, "  %d -> %d;\n", i, list_cursor_get_val(lc));
+
       lc = list_cursor_next(lc);
     }
   }
@@ -275,7 +409,9 @@ t_stack *graphm_find_path(t_graphm *gm, int from, int to, t_bool rec) {
     for (int i = 0; i < gm->size; i++)
       visited[i] = 0;
 
-    graphm_find_path_rec(gm, from, to, visited, path);
+    t_bool found = graphm_find_path_rec(gm, from, to, visited, path);
+    if (!found)
+      printf("Aucun chemin trouvé pour cette configuration\n");
 
     free(visited);
     return path;
@@ -292,7 +428,9 @@ t_stack *graphl_find_path(t_graphl *gl, int from, int to, t_bool rec) {
     for (int i = 0; i < gl->size; i++)
       visited[i] = 0;
 
-    graphl_find_path_rec(gl, from, to, visited, path);
+    t_bool found = graphl_find_path_rec(gl, from, to, visited, path);
+    if (!found)
+      printf("Aucun chemin trouvé pour cette configuration\n");
 
     free(visited);
     return path;
@@ -301,7 +439,7 @@ t_stack *graphl_find_path(t_graphl *gl, int from, int to, t_bool rec) {
   return graphl_find_path_it(gl, from, to);
 }
 
-void graph_show_path(t_stack *path, char *out_path) {
+void graph_show_path(t_stack *path, char *out_path, t_bool is_nom, char **map_nom) {
   FILE *file;
   if (out_path == NULL)
     file = stdout;
@@ -315,10 +453,17 @@ void graph_show_path(t_stack *path, char *out_path) {
   while (!list_cursor_at_end(lc)) {
     int v = list_cursor_get_val(lc);
 
-    if (list_cursor_at_end(list_cursor_next(lc)))
-      fprintf(file, "%d;", v);
-    else
-      fprintf(file, "%d -> ", v);
+    if (list_cursor_at_end(list_cursor_next(lc))) {
+      if (is_nom)
+        fprintf(file, "%s;", map_nom[v]);
+      else
+        fprintf(file, "%d;", v);
+    } else {
+      if (is_nom)
+        fprintf(file, "%s -> ", map_nom[v]);
+      else
+        fprintf(file, "%d -> ", v);
+    }
 
     lc = list_cursor_next(lc);
   }
@@ -612,19 +757,27 @@ void graphl_kosaraju_2_rec(t_graphl *gl, int x, int *marking, int *curr_cfc) {
   }
 }
 
-void show_cfc(int **cfc, int size) {
+void show_cfc(int **cfc, int size, FILE *file, t_bool is_nom, char **map_nom) {
   for (int i = 0; i < size; i++) {
     if (cfc[i][0] == -1)
       continue;
-    printf("Composante #%d: [", i + 1);
+    fprintf(file, "Composante #%d: [", i + 1);
     for (int j = 0; j < size; j++) {
-      if (j + 1 < size && cfc[i][j + 1] == -1) {
-        printf("%d", cfc[i][j]);
+      if (j == size - 1 || cfc[i][j + 1] == -1) {
+        if (is_nom)
+          fprintf(file, "%s", map_nom[cfc[i][j]]);
+        else
+          fprintf(file, "%d", cfc[i][j]);
+
         break;
       }
-      printf("%d, ", cfc[i][j]);
+
+      if (is_nom)
+        fprintf(file, "%s, ", map_nom[cfc[i][j]]);
+      else
+        fprintf(file, "%d, ", cfc[i][j]);
     }
-    printf("]\n");
+    fprintf(file, "]\n");
   }
 }
 

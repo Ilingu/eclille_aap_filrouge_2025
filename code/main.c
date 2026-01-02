@@ -8,15 +8,19 @@
 #include "ll.h"
 #include "stack.h"
 
+#define TEMP_CONVERTED_REPRESENTATION "./converted.txt"
+
 typedef enum {
   DOT,
   FIND,
   CFC
 } t_command;
 
+t_bool is_name_representation(char *inpath);
+
 int main(int argc, char **argv) {
   /* ---------PARSER--------- */
-  assert(argc >= 2 && argc <= 11);
+  assert(argc >= 2 && argc <= 12);
 
   // argument parsing
   t_command command;
@@ -87,6 +91,17 @@ int main(int argc, char **argv) {
     }
   }
 
+  // verifie quelle type de représentation est utiliser (nombre/nom) et s'adapte en conséquent
+  char **map_nom;
+  int *map_nom_len;
+  t_bool is_nom = is_name_representation(input);
+  if (is_nom) {
+    map_nom_len = malloc(sizeof(int));
+    assert(map_nom_len != NULL);
+    map_nom = convert_word_to_num(input, TEMP_CONVERTED_REPRESENTATION, map_nom_len);
+    input = TEMP_CONVERTED_REPRESENTATION;
+  }
+
   /* ---------PROGAM--------- */
   if (use_ll) {
     /* linked list implementation */
@@ -94,19 +109,27 @@ int main(int argc, char **argv) {
 
     // which command to execute
     if (command == DOT)
-      graphl_to_dot(gl, output);
+      graphl_to_dot(gl, output, is_nom, map_nom);
     else if (command == FIND) {
       t_stack *path = graphl_find_path(gl, start, goal, is_rec);
-      graph_show_path(path, output);
+      graph_show_path(path, output, is_nom, map_nom);
       free_stack(path); // free memory
     } else {
+      FILE *file;
+      if (output == NULL)
+        file = stdout;
+      else
+        file = fopen(output, "w");
+      assert(file != NULL);
+
       int **cfc = graphl_search_cfc(gl);
-      show_cfc(cfc, gl->size);
+      fprintf(file, "CFC:\n");
+      show_cfc(cfc, gl->size, file, is_nom, map_nom);
 
       if (print_cfct) {
-        printf("CFC Terminal:\n");
+        fprintf(file, "CFC Terminal:\n");
         int **cfct = cfctl_filter(gl, cfc);
-        show_cfc(cfct, gl->size);
+        show_cfc(cfct, gl->size, file, is_nom, map_nom);
         free_cfc(cfct, gl->size);
       }
 
@@ -120,29 +143,78 @@ int main(int argc, char **argv) {
 
     // which command to execute
     if (command == DOT)
-      graphm_to_dot(gm, output);
+      graphm_to_dot(gm, output, is_nom, map_nom);
     else if (command == FIND) {
       t_stack *path = graphm_find_path(gm, start, goal, is_rec);
 
-      graph_show_path(path, output);
+      graph_show_path(path, output, is_nom, map_nom);
       free_stack(path); // free memory
     } else {
+      FILE *file;
+      if (output == NULL)
+        file = stdout;
+      else
+        file = fopen(output, "w");
+      assert(file != NULL);
+
       int **cfc = graphm_search_cfc(gm);
-      printf("CFC:\n");
-      show_cfc(cfc, gm->size);
+      fprintf(file, "CFC:\n");
+      show_cfc(cfc, gm->size, file, is_nom, map_nom);
 
       if (print_cfct) {
-        printf("CFC Terminal:\n");
+        fprintf(file, "CFC Terminal:\n");
         int **cfct = cfctm_filter(gm, cfc);
-        show_cfc(cfct, gm->size);
+        show_cfc(cfct, gm->size, file, is_nom, map_nom);
         free_cfc(cfct, gm->size);
       }
 
       free_cfc(cfc, gm->size);
+      fclose(file);
     }
 
     free_graphm(gm); // free memory
   }
 
+  // free les variable en relation avec la représentation en "nom"
+  if (is_nom) {
+    for (int i = 0; i < *map_nom_len; i++)
+      free(map_nom[i]);
+
+    free(map_nom);
+    free(map_nom_len);
+
+    // supprime le fichier temporaire nom->nombre 'converted.txt'
+    if (remove(TEMP_CONVERTED_REPRESENTATION) != 0) {
+      printf("Failed to remove temporary converted file\n");
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+// check if the graph representation of the input file is name or numeros.
+t_bool is_name_representation(char *inpath) {
+  FILE *file;
+  if (inpath == NULL) {
+    printf("You'll be prompted to specify your graph with an abjacent linked list\n");
+    file = stdin;
+  } else
+    file = fopen(inpath, "r");
+  assert(file != NULL);
+
+  char g_data[MAX_READ_LINE];
+  fgets(g_data, MAX_READ_LINE, file);
+
+  for (int i = 0; i < MAX_READ_LINE; i++) {
+    if (g_data[i] == '\n')
+      break;
+    if ((g_data[i] == ' ' || g_data[i] == '\t') && i + 1 < MAX_READ_LINE && g_data[i + 1] == 'n') {
+      fclose(file);
+      return 1;
+    }
+  }
+
+  fclose(file);
   return 0;
 }
