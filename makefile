@@ -5,98 +5,92 @@ build:
 ### TEST COMPLET ###
 
 ex1: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/numeros/ex1.txt
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -i ./tests/graphes/numeros/ex1-lr-scrambled.txt -start 0 -goal 3
 
-	echo "Test CFCT:"
+	@echo "Test CFCT:"
 	./fr cfc -i ./tests/graphes/numeros/ex1-tabs-lr.txt -ll -cfct
 
 ex1nom: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/noms/ex1.txt -ll
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -i ./tests/graphes/noms/ex1-lr-scrambled.txt -start 0 -goal 3 -ll -rec
 
-	echo "Test CFC:"
+	@echo "Test CFC:"
 	./fr cfc -i ./tests/graphes/noms/ex1-tabs-lr.txt
 
 ex2: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/numeros/ex2.txt
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -i ./tests/graphes/numeros/ex2.txt -start 2 -goal 9 -ll -rec
 
-	echo "Test CFCT:"
+	@echo "Test CFCT:"
 	./fr cfc -i ./tests/graphes/numeros/ex2.txt -cfct
 
 ex2nom: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/noms/ex2.txt
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -i ./tests/graphes/noms/ex2.txt -start 0 -goal 6
 
-	echo "Test CFC:"
+	@echo "Test CFC:"
 	./fr cfc -i ./tests/graphes/noms/ex2.txt
 
 automaton: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/numeros/automaton.txt -ll
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -i ./tests/graphes/numeros/automaton.txt -start 8 -goal 4
 
-	echo "Test CFCT:"
+	@echo "Test CFCT:"
 	./fr cfc -i ./tests/graphes/numeros/automaton.txt -cfct -ll
 
 onlyonescc: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/noms/only-one-scc.txt
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -start 0 -goal 7 -i ./tests/graphes/noms/only-one-scc.txt -rec
 
-	echo "Test CFC:"
+	@echo "Test CFC:"
 	./fr cfc -i ./tests/graphes/noms/only-one-scc.txt
 
 pcbind: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/noms/PC-bind.txt -o ./out.txt
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -start 0 -goal 56 -i ./tests/graphes/noms/PC-bind.txt -rec -ll
 
 javadeps: build
-	echo "Test DOT:"
+	@echo "Test DOT:"
 	./fr dot -i ./tests/graphes/noms/GD06-Java.txt -o ./out.txt
 
-	echo "Test chemin:"
+	@echo "Test chemin:"
 	./fr find -start 34 -goal 560 -i ./tests/graphes/noms/GD06-Java.txt -rec -ll
 
-	echo "Test CFC:"
+	@echo "Test CFC:"
 	./fr cfc -i ./tests/graphes/noms/GD06-Java.txt -ll
 
 ### BENCHMARK TEST ###
 
 benchmark: build
-	echo "benchmark dot"
-	time ./fr dot -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null
-	time ./fr dot -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null -ll
+	@echo "benchmark dot"
+	time -p ./fr dot -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null
+	time -p ./fr dot -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null -ll
 
-	echo "benchmark find"
-	time ./fr find -i ./tests/graphes/numeros/only-one-scc.txt -start 0 -goal 17 -o /dev/null
-	time ./fr find -i ./tests/graphes/numeros/only-one-scc.txt -start 0 -goal 17 -o /dev/null -rec
-	time ./fr find -i ./tests/graphes/numeros/only-one-scc.txt -start 0 -goal 17 -o /dev/null -ll
-	time ./fr find -i ./tests/graphes/numeros/only-one-scc.txt -start 0 -goal 17 -o /dev/null -ll -rec
-
-	echo "benchmark cfc"
-	time ./fr cfc -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null
-	time ./fr cfc -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null -ll
+	@echo "benchmark cfc"
+	time -p ./fr cfc -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null
+	time -p ./fr cfc -i ./tests/graphes/numeros/PC-biogrid.txt -o /dev/null -ll
 
 ### TEST PARTIELLE ###
 
